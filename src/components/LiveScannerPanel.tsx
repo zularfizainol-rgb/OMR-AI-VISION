@@ -14,40 +14,59 @@ export function LiveScannerPanel({ numQuestions, onScanResult }: LiveScannerPane
   const [cameraError, setCameraError] = useState<string | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [lastImage, setLastImage] = useState<string | null>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+
+  const startCamera = async () => {
+    try {
+      setCameraError(null);
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        throw new Error("Sila buka aplikasi di tetingkap baru (New Tab) untuk memberikan kebenaran kamera kepada pelayar web.");
+      }
+      
+      // Stop existing stream if any
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(track => track.stop());
+      }
+      
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'environment', width: { ideal: 1920 }, height: { ideal: 1080 } }
+      });
+      streamRef.current = stream;
+      
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        videoRef.current.play().then(() => {
+          setIsStreaming(true);
+        }).catch(err => {
+          console.warn("Video play interrupted or paused:", err);
+          setCameraError("Gagal memainkan video dari kamera. Sila semak kebenaran pelayar web anda.");
+          setIsStreaming(false);
+        });
+      }
+    } catch (err: any) {
+      console.error("Error accessing camera", err);
+      setCameraError(err.message || "Akses kamera ditolak atau peranti tidak ditemui. Pastikan anda benarkan akses kamera.");
+      setIsStreaming(false);
+    }
+  };
 
   useEffect(() => {
-    let stream: MediaStream | null = null;
-    const startCamera = async () => {
-      try {
-        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-          throw new Error("Sila buka aplikasi di tetingkap baru (New Tab) untuk memberikan kebenaran kamera kepada pelayar web.");
-        }
-        stream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: 'environment', width: { ideal: 1920 }, height: { ideal: 1080 } }
-        });
-        if (videoRef.current) {
-          videoRef.current.srcObject = stream;
-          videoRef.current.play().then(() => {
-            setIsStreaming(true);
-            setCameraError(null);
-          }).catch(err => {
-            console.warn("Video play interrupted or paused:", err);
-            setCameraError("Gagal memainkan video dari kamera. Sila semak kebenaran pelayar web anda.");
-          });
-        }
-      } catch (err: any) {
-        console.error("Error accessing camera", err);
-        setCameraError(err.message || "Akses kamera ditolak atau peranti tidak ditemui. Pastikan anda benarkan akses kamera.");
-      }
-    };
-
     startCamera();
     return () => {
-      if (stream) {
-        stream.getTracks().forEach(track => track.stop());
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(track => track.stop());
       }
     };
   }, []);
+
+  const handleVideoPause = () => {
+    setIsStreaming(false);
+  };
+
+  const handleVideoPlay = () => {
+    setIsStreaming(true);
+  };
+
 
   const handleSnapAndAnalyze = async () => {
     if (!videoRef.current || !canvasRef.current) return;
@@ -154,14 +173,21 @@ export function LiveScannerPanel({ numQuestions, onScanResult }: LiveScannerPane
               {cameraError}
             </div>
           ) : !isStreaming ? (
-            <div className="text-slate-400 absolute z-20 font-medium tracking-widest text-sm uppercase">
-              Menghidupkan Kamera...
-            </div>
+            <div className="flex flex-col items-center justify-center absolute z-20 gap-4">
+               <div className="text-slate-400 font-medium tracking-widest text-sm uppercase">
+                 Kamera Tidak Aktif
+               </div>
+               <button onClick={startCamera} className="bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-2 rounded-full text-sm font-bold shadow-lg flex items-center gap-2 transition-transform transform active:scale-95">
+                 <Camera className="w-4 h-4" /> Hidupkan Semula
+               </button>
+             </div>
           ) : null}
           <video 
             ref={videoRef} 
             className="absolute inset-0 w-full h-full object-contain" 
             playsInline muted 
+            onPause={handleVideoPause}
+            onPlay={handleVideoPlay}
           />
           <canvas ref={canvasRef} className="hidden" />
           

@@ -58,10 +58,16 @@ export function LiveScannerPanel({ numQuestions, onScanResult }: LiveScannerPane
     const video = videoRef.current;
     const canvas = canvasRef.current;
     
+    // Crop center 70% (15% margins) to focus on the answers and remove background
+    const marginX = video.videoWidth * 0.15;
+    const marginY = video.videoHeight * 0.15;
+    const sourceWidth = video.videoWidth * 0.70;
+    const sourceHeight = video.videoHeight * 0.70;
+
     // Downscale the image to reduce upload & processing time
-    const maxDimension = 800;
-    let targetWidth = video.videoWidth;
-    let targetHeight = video.videoHeight;
+    const maxDimension = 600;
+    let targetWidth = sourceWidth;
+    let targetHeight = sourceHeight;
     
     if (targetWidth > maxDimension || targetHeight > maxDimension) {
       if (targetWidth > targetHeight) {
@@ -81,7 +87,8 @@ export function LiveScannerPanel({ numQuestions, onScanResult }: LiveScannerPane
         return;
     }
     
-    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    // Draw cropped portion
+    ctx.drawImage(video, marginX, marginY, sourceWidth, sourceHeight, 0, 0, canvas.width, canvas.height);
     // Use lower quality jpeg to reduce payload size significantly
     const base64Image = canvas.toDataURL('image/jpeg', 0.4);
     setLastImage(base64Image);
@@ -166,8 +173,8 @@ export function LiveScannerPanel({ numQuestions, onScanResult }: LiveScannerPane
                     Fokuskan jawapan dan tekan "Snap"
                 </div>
                 </div>
-                {/* Visual border hints */}
-                <div className="absolute inset-6 border-2 border-indigo-400/50 border-dashed rounded-xl pointer-events-none mix-blend-overlay"></div>
+                {/* Visual border hints - representing the crop area */}
+                <div className="absolute top-[15%] bottom-[15%] left-[15%] right-[15%] border-2 border-indigo-400/80 border-dashed rounded-xl pointer-events-none shadow-[0_0_0_9999px_rgba(0,0,0,0.4)]"></div>
             </>
           )}
         </div>

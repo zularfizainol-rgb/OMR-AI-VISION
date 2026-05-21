@@ -38,10 +38,7 @@ export default async function handler(req: any, res: any) {
       contents: {
         parts: [
           {
-            text: `You are an automated OMR (Optical Mark Recognition) grading assistant. I have provided an image of a student's OMR answer sheet. Read the marked answers carefully. There are ${numQuestions} questions. Return a JSON array where each item represents a question. Each item MUST be an object with:
-- "question": The number of the question.
-- "answer": The letter of the marked answer ('A', 'B', 'C', 'D', 'E'). If multiple are marked, return 'ERROR'. If none are marked, return 'BLANK'.
-Only return the array up to Question ${numQuestions}. Start from 1.`
+            text: `Extract marked multiple-choice answers from the provided cropped image representing an OMR sheet. There are ${numQuestions} questions. Return ONLY a JSON array. For each question 1 to ${numQuestions}, provide the 'question' number and the 'answer' ('A', 'B', 'C', 'D', 'E', 'BLANK', or 'ERROR' for multiple).`
           },
           {
             inlineData: {

@@ -34,20 +34,22 @@ async function startServer() {
 
       const response = await ai.models.generateContent({
         model: 'gemini-3.5-flash',
-        contents: [
-          {
-            text: `You are an automated OMR (Optical Mark Recognition) grading assistant. I have provided an image of a student's OMR answer sheet. Read the marked answers carefully. There are ${numQuestions} questions. Return a JSON array where each item represents a question. Each item MUST be an object with:
+        contents: {
+          parts: [
+            {
+              text: `You are an automated OMR (Optical Mark Recognition) grading assistant. I have provided an image of a student's OMR answer sheet. Read the marked answers carefully. There are ${numQuestions} questions. Return a JSON array where each item represents a question. Each item MUST be an object with:
 - "question": The number of the question.
 - "answer": The letter of the marked answer ('A', 'B', 'C', 'D', 'E'). If multiple are marked, return 'ERROR'. If none are marked, return 'BLANK'.
 Only return the array up to Question ${numQuestions}. Start from 1.`
-          },
-          {
-            inlineData: {
-              data: base64Data,
-              mimeType: 'image/jpeg'
+            },
+            {
+              inlineData: {
+                data: base64Data,
+                mimeType: 'image/jpeg'
+              }
             }
-          }
-        ],
+          ]
+        },
         config: {
           responseMimeType: "application/json",
           responseSchema: {

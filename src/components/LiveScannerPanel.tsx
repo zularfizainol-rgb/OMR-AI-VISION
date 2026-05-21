@@ -99,7 +99,8 @@ export function LiveScannerPanel({ numQuestions, onScanResult }: LiveScannerPane
       });
 
       if (!response.ok) {
-        throw new Error('Gagal memproses imej');
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Server returned status ' + response.status);
       }
 
       const data = await response.json();
@@ -118,9 +119,9 @@ export function LiveScannerPanel({ numQuestions, onScanResult }: LiveScannerPane
       }
       
       onScanResult(answers);
-    } catch (error) {
+    } catch (error: any) {
       console.error('API Error:', error);
-      alert('Ralat semasa menganalisis kertas jawapan. Sila cuba lagi.');
+      alert('Ralat sistem: ' + (error.message || 'Sila cuba lagi.'));
     } finally {
       setIsAnalyzing(false);
     }

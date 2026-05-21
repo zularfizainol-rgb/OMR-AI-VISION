@@ -10,10 +10,34 @@ import { Info, CheckCircle2, AlertTriangle } from 'lucide-react';
 export default function App() {
   const { toasts } = useToast();
   
-  const [numQuestions, setNumQuestions] = useState<number>(50);
-  const [skema, setSkema] = useState<Option[]>(Array(50).fill('-'));
+  const [numQuestions, setNumQuestions] = useState<number>(() => {
+    const saved = localStorage.getItem('omrNumQuestions');
+    return saved ? parseInt(saved, 10) : 50;
+  });
   
+  const [skema, setSkema] = useState<Option[]>(() => {
+    const saved = localStorage.getItem('omrSkema');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) return parsed;
+      } catch (e) {
+        // ignore parsing errors
+      }
+    }
+    const savedNum = localStorage.getItem('omrNumQuestions');
+    return Array(savedNum ? parseInt(savedNum, 10) : 50).fill('-');
+  });
+
   const [answers, setAnswers] = useState<AnswerStatus[]>([]);
+
+  React.useEffect(() => {
+    localStorage.setItem('omrNumQuestions', numQuestions.toString());
+  }, [numQuestions]);
+
+  React.useEffect(() => {
+    localStorage.setItem('omrSkema', JSON.stringify(skema));
+  }, [skema]);
 
   const handleNumQuestionsChange = (num: number) => {
     setNumQuestions(num);

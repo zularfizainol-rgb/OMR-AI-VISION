@@ -59,7 +59,7 @@ export function LiveScannerPanel({ numQuestions, onScanResult }: LiveScannerPane
     const canvas = canvasRef.current;
     
     // Downscale the image to reduce upload & processing time
-    const maxDimension = 1000;
+    const maxDimension = 800;
     let targetWidth = video.videoWidth;
     let targetHeight = video.videoHeight;
     
@@ -83,7 +83,7 @@ export function LiveScannerPanel({ numQuestions, onScanResult }: LiveScannerPane
     
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
     // Use lower quality jpeg to reduce payload size significantly
-    const base64Image = canvas.toDataURL('image/jpeg', 0.6);
+    const base64Image = canvas.toDataURL('image/jpeg', 0.4);
     setLastImage(base64Image);
 
     try {
